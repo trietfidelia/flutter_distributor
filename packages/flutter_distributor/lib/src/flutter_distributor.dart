@@ -167,9 +167,9 @@ class FlutterDistributor {
               'Copying necessary dll files to the output directory...'
                   .brightBlue(),
             );
-            // await copyDLL('msvcp140');
-            // await copyDLL('vcruntime140_1');
-            // await copyDLL('vcruntime140');
+            await copyDLL('msvcp140');
+            await copyDLL('vcruntime140_1');
+            await copyDLL('vcruntime140');
           } on UnsupportedError catch (error) {
             logger.warning('Warning: ${error.message}'.yellow());
             continue;
