@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_app_builder/flutter_app_builder.dart';
 import 'package:flutter_app_packager/flutter_app_packager.dart';
@@ -162,6 +163,13 @@ class FlutterDistributor {
               'Successfully built ${buildResult.outputDirectory} in ${buildResult.duration!.inSeconds}s'
                   .brightGreen(),
             );
+            logger.info(
+              'Copying necessary dll files to the output directory...'
+                  .brightBlue(),
+            );
+            // await copyDLL('msvcp140');
+            // await copyDLL('vcruntime140_1');
+            // await copyDLL('vcruntime140');
           } on UnsupportedError catch (error) {
             logger.warning('Warning: ${error.message}'.yellow());
             continue;
@@ -206,6 +214,68 @@ class FlutterDistributor {
     }
 
     return makeResultList;
+  }
+
+  Future<void> copyDLL(String dllName) async {
+    // Get the path to the current directory
+    String currentDirectory = Directory.current.path;
+
+    // Determine the path to the build directory based on the current directory
+    String buildDirectoryPath = '$currentDirectory/build';
+
+    // Check if the build directory exists
+    if (await Directory(buildDirectoryPath).exists()) {
+      // Determine the path to the Windows build directory
+      String windowsBuildDirectoryPath = '$buildDirectoryPath/windows';
+
+      // Check if the Windows build directory exists
+      if (await Directory(windowsBuildDirectoryPath).exists()) {
+        // Determine the path to the x64 build directory
+        String x64BuildDirectoryPath = '$windowsBuildDirectoryPath/x64';
+
+        // Check if the x64 build directory exists
+        if (await Directory(x64BuildDirectoryPath).exists()) {
+          // Determine the path to the runner directory
+          String runnerDirectoryPath = '$x64BuildDirectoryPath/runner';
+
+          // Check if the runner directory exists
+          if (await Directory(runnerDirectoryPath).exists()) {
+            // Determine the path to the Release directory
+            String releaseDirectoryPath = '$runnerDirectoryPath/Release';
+
+            // Check if the Release directory exists
+            if (await Directory(releaseDirectoryPath).exists()) {
+              // Path to the DLL file in the assets directory
+              String dllAssetPath = '$currentDirectory/assets/dlls/$dllName.dll';
+
+              try {
+                // Read the DLL file
+                File dllFile = File(dllAssetPath);
+                Uint8List bytes = await dllFile.readAsBytes();
+
+                // Write the DLL file to the Release directory
+                String dllTargetPath = '$releaseDirectoryPath/$dllName.dll';
+                await File(dllTargetPath).writeAsBytes(bytes);
+                logger.info(
+                  'DLL file copied successfully to $dllTargetPath'
+                      .brightGreen(),
+                );
+                return;
+              } catch (e) {
+                logger.info(
+                  'Error copying DLL file: $e'.brightRed(),
+                );
+                return;
+              }
+            }
+          }
+        }
+      }
+    }
+    logger.info(
+      'Error: Unable to locate the release directory for copying DLL file.'
+          .brightRed(),
+    );
   }
 
   Future<List<PublishResult>> publish(

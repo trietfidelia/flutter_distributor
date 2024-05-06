@@ -64,10 +64,6 @@ abstract class AppBuilder {
       [buildSubcommand, ...buildArguments],
     );
 
-    print('TRIET TESTING HERE1::::::: ----------------------------------------');
-    print('TRIET TESTING HERE2::::::: ----------------------------------------');
-    print('TRIET TESTING HERE3::::::: ----------------------------------------');
-
     if (processResult.exitCode != 0) {
       throw BuildError('${processResult.stderr}');
     }
